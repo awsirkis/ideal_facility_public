@@ -1,5 +1,5 @@
 const faunadb = require('faunadb')
-const client = new faunadb.Client({secret:"fnAEA7V-q5ACDLD3Shn7KWkAUywu77Ly8WRQMzKN"})
+const client = new faunadb.Client({secret:""})
 import express from 'express'
 const app = express()
 const {
@@ -30,7 +30,7 @@ async function sendEmail(name, email, username, password){
         service: 'gmail',
         auth: {
           user: 'noreply.cmaa@gmail.com',
-          pass: 'fjtnthfwmvhnrdtt'
+          pass: ''
         }
       });
       
