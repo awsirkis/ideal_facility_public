@@ -140,7 +140,7 @@ async function sendEmail(name, email, username, password){
         service: 'gmail',
         auth: {
           user: 'noreply.cmaa@gmail.com',
-          pass: 'fjtnthfwmvhnrdtt'
+          pass: ''
         }
       });
       
