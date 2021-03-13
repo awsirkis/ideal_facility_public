@@ -1,0 +1,13 @@
+[build]
+    functions="api"
+    publish="/dist"
+    command="npm run generate"
+[[redirects]]
+    from="/api/*"
+    to=".netlify/api/"
+    status=200
+
+[[headers]]
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
