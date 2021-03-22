@@ -7,7 +7,7 @@ const Model = Sequelize.Model
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: './database.sqlite',
+    storage: './api/database.sqlite',
     define:{
         timestamps: true
     }
@@ -140,7 +140,7 @@ async function sendEmail(name, email, username, password){
         service: 'gmail',
         auth: {
           user: 'noreply.cmaa@gmail.com',
-          pass: 'fjtnthfwmvhnrdtt'
+          pass: ''
         }
       });
       
@@ -195,6 +195,26 @@ async function new_pass(plaintext){
     const password = sha256hasher.update(plaintext).digest("hex")
     return {salt: salt, hash: password}
 }
+async function authenticate(username, password){
+    await User.sync()
+    const user = await User.findOne({
+        where:{
+            username: username,
+            password:password
+        }
+    })
+    return user != null
+}
+async function admin(username, password){
+    await User.sync()
+    const user = await User.findOne({
+        where:{
+            username: username,
+            password:password
+        }
+    })
+    return user != null && user.role == 4
+}
 app.post('/',(req, res)=>{
     
 })
@@ -210,42 +230,61 @@ app.delete('/',(req, res)=>{
 
 app.post('/user', async (req, res) => {
     await User.sync()
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     let pw = await pass()
     let {salt, hash} = await new_pass(pw)
     let u = await uniqueUsername(req.query.name.split(" ").shift().charAt(0).toLowerCase() + req.query.name.split(" ")[1].toLowerCase())
-    let user = await User.create({username: u, name: req.query.name, email: req.query.email, password: hash, salt: salt, role:1, enabled: true})
+    let user = await User.create({username: u, name: req.query.name, email: req.query.email, password: hash, salt: salt, role:0, enabled: true})
     await sendEmail(req.query.name, req.query.email, u, pw)
     res.json(user)
 })
 app.post('/department', async (req, res) => {
-    
     await Department.sync()
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     let doc = await Department.create({name: req.query.name, description: req.query.description, thumbnail: req.query.thumbnail})
     res.json(doc)
 })
 app.post('/product', async (req, res) => {
-    
     await Product.sync()
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     let prod = await Product.create({name: req.query.name, model: req.query.model, assetTag: req.query.assetTag, thumbnail: req.query.thumbnail, parent: req.query.parent})
     res.json(prod)
 })
 app.post('/category', async (req, res) => {
     await Category.sync()
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     let cat = await Category.create({name: req.query.name, parent: req.query.id})
     res.json(cat)
 })
 app.post('/doc', async (req, res) => {
     await Document.sync()
-    let doc = await Document.create({name: req.query.name, data: req.query.data, parent: req.query.id})
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
+    let doc = await Document.create({name: req.query.name, data: req.body.data, parent: req.query.id})
     res.json(doc)
 })
 
 app.delete('/user', async (req, res) => {
     await User.sync()
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     const user = await User.destroy({where:{id:req.query.id}})
     res.json(user)
 })
 app.delete('/department', async (req, res) => {
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Department.sync()
     await Product.sync()
     await Category.sync()
@@ -265,6 +304,9 @@ app.delete('/department', async (req, res) => {
     res.json(dep)
 })
 app.delete('/product', async (req, res) => {
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Product.sync()
     await Category.sync()
     await Document.sync()
@@ -277,6 +319,9 @@ app.delete('/product', async (req, res) => {
     res.json(prod)
 })
 app.delete('/category', async (req, res) => {
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Category.sync()
     await Document.sync()
     const cat = await Category.destroy({where:{id: req.query.id}})
@@ -284,12 +329,18 @@ app.delete('/category', async (req, res) => {
     res.json(cat)
 })
 app.delete('/doc', async (req, res) => {
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Document.sync()
     const doc = await Document.destroy({where:{id: req.query.id}})
     res.json(doc)
 })
 
 app.put('/user-password', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await User.sync()
     let {salt, hash} = await new_pass(req.query.new_pass)
     const user = User.update({
@@ -304,6 +355,9 @@ app.put('/user-password', async (req, res) => {
     res.json(user)
 })
 app.put('/user-name', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await User.sync()
     const user = User.update({
         name: req.query.name
@@ -316,6 +370,9 @@ app.put('/user-name', async (req, res) => {
     res.json(user)
 })
 app.put('/user-email', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await User.sync()
     const user = User.update({
         email: req.query.email
@@ -328,10 +385,15 @@ app.put('/user-email', async (req, res) => {
     res.json(user)
 })
 app.put('/user', async (req, res) => {
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await User.sync()
     const user = User.update({
         name: req.query.name,
-        email: req.query.email
+        email: req.query.email,
+        enabled: req.query.enabled,
+        role: req.query.role
     },
     {
         where:{
@@ -362,6 +424,9 @@ app.put('/reset', async (req, res) => {
     res.json(user)
 })
 app.put('/department', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Department.sync()
     const dep = await Department.update({
         name: req.query.name, 
@@ -376,6 +441,9 @@ app.put('/department', async (req, res) => {
     res.json({message:'good'})
 })
 app.put('/product', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Product.sync()
     const prod = await Product.update({
         name: req.query.name,
@@ -391,6 +459,9 @@ app.put('/product', async (req, res) => {
     res.json({message:'good'})
 })
 app.put('/category', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Category.sync()
     const cat = await Category.update({
         name: req.query.name
@@ -403,6 +474,9 @@ app.put('/category', async (req, res) => {
     res.json(cat)
 })
 app.put('/doc', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Document.sync()
     await Document.update({
         name: req.query.name,
@@ -417,32 +491,29 @@ app.put('/doc', async (req, res) => {
 })
 
 app.get('/user', async (req, res) => {
+    if(!await admin(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await User.sync()
-    const list = await User.findAll()
-    res.json(list)
+    res.json(await User.findAll())
 })
 app.get('/signin', async (req, res) => {
     await User.sync()
     const user = await User.findOne({
         where:{
-            [Sequelize.Op.and]: {username: req.query.username}
+            username: req.query.username,
+            password:req.query.password
         }
     })
-    if(req.query.password){
-        const hash = crypto.createHmac("sha512", user.salt)
-        if(hash.update(req.query.password).digest("hex") == user.password){
-            res.json(user)
-        }
-    }
-    else if(req.query.token){
-        if(user.token == req.query.token){
-            res.json(user)
-        }
-    }
-    res.json(user)
+    if(user)
+        res.json(user)
+    else    
+        res.status(403)
 })
 app.get('/department', async (req, res) => {
-    
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Department.sync()
     if(req.query.mode == 'single'){
         const dep = await Department.findOne({
@@ -461,7 +532,9 @@ app.get('/department', async (req, res) => {
     }
 })
 app.get('/product', async (req, res) => {
-    
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Product.sync()
     if(req.query.mode == 'single'){
         const prod = await Product.findOne({
@@ -497,6 +570,9 @@ app.get('/product', async (req, res) => {
     }
 })
 app.get('/category', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Category.sync()
     if(req.query.mode == 'all'){
         const list = await Category.findAll({
@@ -525,6 +601,9 @@ app.get('/category', async (req, res) => {
     }
 })
 app.get('/doc', async (req, res) => {
+    if(!await authenticate(req.query.username, req.query.password)){
+        res.status(403)
+    }
     await Document.sync()
     let doc
     if(req.query.mode == 'single'){
@@ -545,7 +624,7 @@ app.get('/doc', async (req, res) => {
     }
     else if(req.query.mode="list"){
         const prod = await Document.findAll({
-            attributes:['id'],
+            attributes:['id','name'],
             where:{
                 parent: req.query.id
             }})
@@ -555,7 +634,11 @@ app.get('/doc', async (req, res) => {
         res.status(405)
     }
 })
-
+app.get('/salt',async(req,res)=>{
+    await User.sync()
+    const salt = await User.findOne({attributes:['salt'],where:{username:req.query.username}})
+    res.json(salt)
+})
 export default {
     path: '/api/file2',
     handler: app

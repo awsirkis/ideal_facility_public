@@ -26,7 +26,7 @@ export const getters = {
         return state.user ? state.user.username : null
     },
     password: state=>{
-        return state.user ? state.user.token : null
+        return state.user ? state.user.password : null
     },
     id: state=>{
         return state.user ? state.user.id : null

@@ -10,7 +10,9 @@
                 <input type="email" class="form-control" v-model="email" name="email" placeholder="Email" required>
             </div>
             <div class="col-12 row w-100 row justify-content-around">
-                <button  class="col-2 btn btn-secondary" @click='create'>Create</button>
+                <button  class="col-2 btn btn-secondary" @click='create'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16">
+  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+</svg></button>
             </div>
         </div>
     </div>
@@ -45,7 +47,9 @@
                     </label></td>
                 <td>{{item.id}}</td>
                 <td class="edit" @click="reset(index)">Reset</td>
-                <td class="edit" @click="del(index)">Delete</td>
+                <td class="edit" @click="del(index)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+  <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
+</svg></td>
             </tr>
         </tbody>
     </table>
@@ -109,6 +113,7 @@ export default {
                 username:this.$store.getters.username,
                 password: this.$store.getters.password
             }
+            console.log(params)
             const res = await this.$axios.$get(`/api/file2/user`,{params: params})
             this.users = res
             for(let i = 0; i < this.users.length; ++i)
@@ -118,8 +123,8 @@ export default {
         },
         async push(index){
             this.edit.splice(this.edit.indexOf(index), 1)
+            console.log(this.users[index].admin, this.users[index].role)
             const params = {
-                username: this.users[index].username,
                 name: this.users[index].name,
                 role: this.users[index].admin ? 4 : 1,
                 email: this.users[index].email,

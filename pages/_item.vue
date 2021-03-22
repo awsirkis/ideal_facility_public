@@ -2,11 +2,12 @@
 <main>
     <div v-if="ready">
         <h1>{{item.name}}</h1>
-        <button class="btn btn-success" @click="add()">Add Category</button>
+        <button class="btn btn-success" @click="add()" style="margin-bottom:15px"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16">
+  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+</svg></button>
         <div class="container-fluid">
             <div class="row justify-content-center">
                 <div class="col-4" v-for="(category, index) in categories" :key="`${index}-category`">
-                    <button class="btn btn-danger" @click="del(index)" v-if="$store.getters.role == 1">X</button>
                     <catdisplay :ID="category.id"/>
                 </div>
             </div>
@@ -35,12 +36,9 @@ export default{
         }
     },
     async mounted(){
-        if(!this.$route.query.id){
-            this.$router.push('/')
-        }
         let params ={
             mode:'single',
-            id: this.$route.query.id,
+            id: this.$route.params.item,
             username: this.$store.getters.username,
             password: this.$store.getters.password
         }
@@ -58,19 +56,10 @@ export default{
         }
     },
     methods:{
-        async del(index){
-            const params = {
-                username: this.$store.getters.username,
-                password: this.$store.getters.password,
-                id: this.categories[index].id
-            }
-            await this.$axios.$delete('/api/file2/category',{params: params})
-            this.categories.splice(index, 1)
-        },
         async add(){
             const params = {
                 name:"",
-                id:this.$route.query.id,
+                id:this.$route.params.item,
                 username: this.$store.getters.username,
                 password: this.$store.getters.password,
             }

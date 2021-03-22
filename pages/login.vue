@@ -44,8 +44,9 @@ export default {
     },
     methods:{
       async login(){
-        assetTag
-        const params = {username:this.username,email:this.password}
+        const crypto = require('crypto')    
+        const salt = await this.$axios.$get('/api/file2/salt',{params:{username:this.username}})
+        const params = {username:this.username,password:crypto.createHmac("sha512", salt.salt).update(this.password).digest("hex")}
         const res = await this.$axios.get(`/api/file2/signin`,{params: params})
         if(res.status == 200){
           this.$store.dispatch('login', {user: res.data})
@@ -56,13 +57,9 @@ export default {
         }
       },
       async reset(){
-        assetTag
-        const params={
-            action:'reset',
-            email: this.username
-
-        }
-        const res = await fetch('/.netlify/functions/user', {method:'POST', body: JSON.stringify(params)})
+        const params = {email:this.password}
+        const res = await this.$axios.get(`/api/file2/reset`,{params: params})
+        this.state = 'login'
       }
     }
 }

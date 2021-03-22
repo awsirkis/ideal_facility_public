@@ -79,8 +79,6 @@ export default {
     '@nuxtjs/imagemin'
   ],
   serverMiddleware:[
-    '~/api/file',
-    '~/api/user',
     '~/api/file2'
   ],
   /*
@@ -92,14 +90,14 @@ export default {
     '@nuxtjs/sitemap',
     '@nuxtjs/recaptcha',
     '@nuxtjs/axios',
-    'bootstrap-vue/nuxt',
+    'bootstrap-vue/nuxt'
 
   ],
   boostrapVue:{
-    icons: true
+    icons:true
   },
   axios:{
-    debug: true
+    debug: false
   },
   sitemap:{
     hostname:'https://www.cascademaa.com',
